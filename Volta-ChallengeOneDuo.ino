@@ -1,5 +1,4 @@
-
-#include <Arduino.h>
+#include <Servo.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
@@ -18,6 +17,15 @@
 #define SDA A4
 #define SCK 13
 
+Servo servoOne;
+Servo servoTwo;
+Servo servoThree;
+Servo servoFourth;
+
+int pos = 0;   
+
+float Temperature, Altitude, Pressure ;
+
 //####################### End General ##########################
 
 
@@ -33,7 +41,7 @@ Adafruit_BME280 bme;
 
 //######################## Init MPU9250 #########################
 
-  MPU6050 mpu;
+MPU6050 mpu;
 
 //######################### End MPU9250 #########################
 
@@ -45,7 +53,9 @@ void setup(){
 
   Serial.begin(9600);
 
-   Wire.begin();
+  Wire.begin();
+
+  //Wire.begin(A4, A5); // Start I2C communication
 
 //#################### End GENERAL ##############################
 
@@ -54,7 +64,9 @@ void setup(){
 //#################### Init SERVOS ##############################
 
   pinMode(Servo_one, OUTPUT);
+
   pinMode(Servo_two, OUTPUT);
+
   pinMode(Servo_one, OUTPUT);
 
 //#################### End SERVOS ###############################
@@ -64,30 +76,62 @@ void setup(){
 
   mpu.initialize();
 
-  mpu.setFullScaleGyroRange(0);
+  mpu.setFullScaleGyroRange(90);
   
-  mpu.setFullScaleAccelRange(0);
+  mpu.setFullScaleAccelRange(90);
 
 
 //######################### End MPU9250 #########################
+
+
+
+//######################### BME280 setup #########################
+
+if (!bme.begin(0x76)) {
+		Serial.println("Could not find a valid BME280 sensor, check wiring!");
+		while (1);
+	}
   
    
+//######################### End BME280 setup #########################
+
+//######################## Init Servo #####################################
+
+    servoOne.attach(Servo_one);
+
+    servoTwo.attach(Servo_two);
+
+    servoThree.attach(Servo_three);
+
+    
+
+//######################## End  Servo #####################################
+
+
   }
+
 
 
 //------------------------------------------------------------------------------------
 void loop(){
 
-  bme.readTemperature();
-
-
 //##################### Init BME280 #############################
 
-bme.readTemperature();
+ Temperature = bme.readTemperature();
 
-bme.readPressure() / 100.0F;
+ //Pressure =  bme.readPressure() / 100.0F;
 
-bme.readAltitude(SEALEVELPRESSURE_HPA);
+ Altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
+
+ Serial.print(Temperature);
+
+ Serial.print(",");
+
+ Serial.print(Altitude);
+
+ Serial.print(",");
+
+ 
 
 //####################### End BME280 ############################
 
@@ -99,10 +143,38 @@ bme.readAltitude(SEALEVELPRESSURE_HPA);
  
  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
+ //########################### Debug #############################
+
+ Serial.println(gx);
+ //Serial.print(",");
+ //Serial.print(gy);
+ //Serial.print(",");
+ //Serial.println(gz);
+
+ //delay(500);
+
 //######################### End MPU9250 #########################
 
 
+//for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+//    // in steps of 1 degree
+//    servoOne.write(pos);              // tell servo to go to position in variable 'pos'
+//    delay(15);
+
+    
+//  }
+
+//   for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+//    servoOne.write(pos);              // tell servo to go to position in variable 'pos'
+//    delay(15);                       // waits 15 ms for the servo to reach the position
+//  }
+
+
+
+//end 
+
+ delay(250);
+}
+
 
   
-    
-  }
