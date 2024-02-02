@@ -26,8 +26,8 @@ int pos = 0;
 
 float temperature, altitude, pressure ; //degree celcius, meters , Hpa 
 
-float preAltitude = 0; //in meters 
-unsigned long time = 0;  //in miliseconds
+float preHeight = 0; //in meters 
+unsigned long time;  //in miliseconds
 unsigned long preTime = 0;  //in miliseconds
 
 #define ejection_pin 5 //a digital pin 
@@ -128,7 +128,7 @@ void loop(){
 
 //##################### Init BME280 #############################
 
- temperature = bme.readTemperature();
+ //temperature = bme.readTemperature();
 
  //Pressure =  bme.readPressure() / 100.0F;
 
@@ -136,13 +136,13 @@ void loop(){
 
  
 
- Serial.print(Temperature);
+ //Serial.print(temperature);
 
- Serial.print(",");
+ //Serial.print(",");
 
- Serial.print(Altitude);
+ //Serial.print(altitude);
 
- Serial.print(",");
+ //Serial.print(",");
 
  
 
@@ -194,16 +194,18 @@ void loop(){
 
 //####################### Ejection system #######################
 
+static float firstAltitude = altitude;
+float height = altitude - firstAltitude;
+float deltaHeight = height - preHeight;
+preHeight = height;
+time = millis();
+float  deltaTime = time - preTime;
+preTime = time;
+float height_dot = deltaHeight/deltaTime;
 
-float  deltaAltitude = altitude - preAltitude;
 
-unsigned float  deltaTime = time - pretime;
 
-preAltitude = altitude;
-
-float height_dot = deltaAltitude/deltaTime;
-
-if ( (Altitude > minimumAltitude) &&  ( height_dot > 0) ) {         
+if ( (altitude > minimumAltitude) &&  ( height_dot < 0) ) {         
 
 
   digitalWrite(ejection_pin, HIGH);
@@ -211,7 +213,23 @@ if ( (Altitude > minimumAltitude) &&  ( height_dot > 0) ) {
 
    }
 
-//end loop 
+
+//################### Init Debug ejection system #####################
+
+   Serial.print(height);
+
+   Serial.print(",");
+
+   Serial.println(deltaTime);
+
+   delay(300);
+
+
+//################### End Debug ejection system #####################
+
+
+//end loop
+
 }
 
 
