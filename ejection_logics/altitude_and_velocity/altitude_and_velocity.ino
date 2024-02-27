@@ -30,6 +30,8 @@ float preHeight = 0; //in meters
 unsigned long time;  //in miliseconds
 unsigned long preTime = 0;  //in miliseconds
 
+float deltaHeight;
+
 #define ejection_pin 5 //a digital pin 
 #define minimumAltitude 30   //in meters
 
@@ -196,7 +198,7 @@ void loop(){
 
 static float firstAltitude = altitude;
 float height = altitude - firstAltitude;
-float deltaHeight = height - preHeight;
+deltaHeight = height - preHeight;
 preHeight = height;
 time = millis();
 float  deltaTime = time - preTime;
@@ -205,10 +207,12 @@ float height_dot = deltaHeight/deltaTime;
 
 
 
-if ( (altitude > minimumAltitude) &&  ( height_dot < 0) ) {         
+if ( (height > minimumAltitude) &&  ( deltaHeight < 0) ) {         
 
 
   digitalWrite(ejection_pin, HIGH);
+
+  Serial.print("EYECTION: ");
 
 
    }
@@ -220,7 +224,7 @@ if ( (altitude > minimumAltitude) &&  ( height_dot < 0) ) {
 
    Serial.print(",");
 
-   Serial.println(deltaTime);
+   Serial.println(deltaHeight);
 
    delay(300);
 
