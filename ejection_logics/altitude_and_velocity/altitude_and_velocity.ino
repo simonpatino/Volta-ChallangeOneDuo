@@ -4,6 +4,8 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <MPU6050.h>
+#include <SD.h> // Include the SD library
+
 
 //########################## GENERAL ###########################
 
@@ -22,6 +24,9 @@ Servo servoTwo;
 Servo servoThree;
 Servo servoFourth;
 
+File dataFile; // File object to handle the SD card file
+
+
 int pos = 0;   
 
 float temperature, altitude, pressure ; //degree celcius, meters , Hpa 
@@ -33,7 +38,7 @@ unsigned long preTime = 0;  //in miliseconds
 float deltaHeight;
 
 #define ejection_pin 5 //a digital pin 
-#define minimumAltitude 30   //in meters
+#define minimumAltitude 10   //in meters
 
 //####################### End General ##########################
 
@@ -71,11 +76,11 @@ void setup(){
 
 //#################### Init SERVOS ##############################
 
-  pinMode(Servo_one, OUTPUT);
+ // pinMode(Servo_one, OUTPUT);
 
-  pinMode(Servo_two, OUTPUT);
+ // pinMode(Servo_two, OUTPUT);
 
-  pinMode(Servo_one, OUTPUT);
+// pinMode(Servo_one, OUTPUT);
 
 //#################### End SERVOS ###############################
 
@@ -117,9 +122,31 @@ if (!bme.begin(0x76)) {
 
 //########################  init ejection system ######################
 
-  pinMode(ejection_pin, HIGH); 
+  pinMode(ejection_pin, OUTPUT); 
 
 //########################  end ejection system ######################
+
+//################# init SD CARD ##################
+
+  // Initialize the SD card
+  if (!SD.begin(SS)) {
+    Serial.println("SD card initialization failed!");
+    return;
+  }
+
+  // Create a new file on the SD card
+  dataFile = SD.open("data.txt", FILE_WRITE);
+
+  if (dataFile) {
+    // If the file opens successfully, write headers
+    dataFile.println("Temperature (C), Altitude (m), Height (m),Delta Height (m), Time (ms)");
+    dataFile.close();
+  } else {
+    Serial.println("Error opening file data.txt");
+  }
+
+
+
 
   }
 
@@ -203,7 +230,25 @@ preHeight = height;
 time = millis();
 float  deltaTime = time - preTime;
 preTime = time;
-float height_dot = deltaHeight/deltaTime;
+//float height_dot = deltaHeight/deltaTime;
+
+// Write data to the SD card
+  dataFile = SD.open("data.txt", FILE_WRITE);
+  if (dataFile) {
+    dataFile.print(bme.readTemperature());
+    dataFile.print(",");
+    dataFile.print(altitude);
+    dataFile.print(",");
+    dataFile.print(height);
+    dataFile.print(",");
+    dataFile.print(deltaHeight);
+    dataFile.print(",");
+    dataFile.println(time);
+    dataFile.close();
+  } else {
+    Serial.println("Error opening file data.txt");
+  }
+
 
 
 
@@ -212,7 +257,7 @@ if ( (height > minimumAltitude) &&  ( deltaHeight < 0) ) {
 
   digitalWrite(ejection_pin, HIGH);
 
-  Serial.print("EYECTION: ");
+  Serial.println("EYECTION ");
 
 
    }
@@ -220,14 +265,14 @@ if ( (height > minimumAltitude) &&  ( deltaHeight < 0) ) {
 
 //################### Init Debug ejection system #####################
 
-   Serial.print(height);
+  Serial.print("Height: ");
+  Serial.print(height);
+  Serial.print(", Delta Height: ");
+  Serial.print(deltaHeight);
+  Serial.print(", Time: ");
+  Serial.println(time);
 
-   Serial.print(",");
-
-   Serial.println(deltaHeight);
-
-   delay(300);
-
+  delay(1000); // Adjust delay as needed
 
 //################### End Debug ejection system #####################
 
